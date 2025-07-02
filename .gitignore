@@ -181,3 +181,9 @@ out/
 data/
 plots/
 mlruns/
+
+# Ignore all hidden files and folders
+.*
+
+# Don't ignore these specific files/folders
+!.gitignore
