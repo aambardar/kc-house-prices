@@ -589,10 +589,4 @@ def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_v
     # Log model
     experiment.log_model("xgb_model", model)
 
-    # Log example inputs
-    experiment.log_dataset_info(
-        name="example_inputs",
-        data=X_train_features[:3]
-    )
-
     return study
