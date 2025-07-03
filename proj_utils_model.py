@@ -510,3 +510,89 @@ def run_hyperparam_tuning_xgb(X_train_features, y_train, X_val_features, y_val, 
         )
 
     return study
+
+def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_val, experiment, run_name, num_trials):
+    def optuna_objective(trial):
+        # Create a new experiment for each trial
+        with experiment.train():
+            params_xgb = {
+                'max_depth': trial.suggest_int('max_depth', 2, 10),
+                'learning_rate': trial.suggest_float('learning_rate', 1e-3, 2),
+                'n_estimators': trial.suggest_int('n_estimators', 10, 100),
+                'colsample_bytree': trial.suggest_float('colsample_bytree', 0.3, 0.9)
+            }
+
+            model_xgb = xgboost.XGBRegressor(**params_xgb, n_jobs=-1, enable_categorical=True)
+
+            cv_split_kf = KFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+
+            # Perform cross-validation
+            mse_scores = []
+            for train_idx, val_idx in cv_split_kf.split(X_train_features, y_train):
+                X_tr, X_vl = X_train_features[train_idx], X_train_features[val_idx]
+                y_tr, y_vl = y_train[train_idx], y_train[val_idx]
+
+                model_xgb.fit(X_tr, y_tr)
+                y_vl_pred = model_xgb.predict(X_vl)
+
+                if np.isnan(y_vl_pred).any():
+                    raise ValueError("Model generated NaN predictions")
+
+                mse = mean_squared_error(y_vl, y_vl_pred)
+                mse_scores.append(mse)
+
+            score = np.mean(mse_scores)
+
+            # Log parameters and metrics to Comet
+            experiment.log_parameters(params_xgb)
+            experiment.log_metric("mse", score)
+            experiment.log_metric("rmse", math.sqrt(score))
+
+        return score
+
+    # Set experiment name
+    experiment.set_name(run_name)
+
+    # Log tags
+    experiment.add_tags({
+        "project": PROJECT_NAME,
+        "optimizer_engine": "optuna"
+    })
+
+    # Create and optimize Optuna study
+    optuna.logging.set_verbosity(LOG_OPTUNA_RUN_LEVEL)
+    study = optuna.create_study(direction='minimize', sampler=optuna.samplers.RandomSampler(seed=RANDOM_STATE))
+    study.optimize(optuna_objective, n_trials=num_trials, callbacks=[champion_callback])
+
+    # Log best parameters and metrics
+    experiment.log_parameters(study.best_params)
+    experiment.log_metric("best_mse", study.best_value)
+    experiment.log_metric("best_rmse", math.sqrt(study.best_value))
+
+    # Train final model with best parameters
+    model = xgboost.XGBRegressor(**study.best_params)
+    model.fit(X_train_features, y_train)
+    y_val_pred = model.predict(X_val_features)
+
+    # Create and log residual plot
+    residuals = proj_utils_plots.plot_residuals(y_val_pred, y_val)
+    experiment.log_figure("residuals.png", residuals)
+
+    # Log validation metrics
+    val_mse = mean_squared_error(y_val, y_val_pred)
+    val_rmse = math.sqrt(val_mse)
+    val_r2 = r2_score(y_val, y_val_pred)
+    experiment.log_metric("val_mse", val_mse)
+    experiment.log_metric("val_rmse", val_rmse)
+    experiment.log_metric("val_r2", val_r2)
+
+    # Log model
+    experiment.log_model("xgb_model", model)
+
+    # Log example inputs
+    experiment.log_dataset_info(
+        name="example_inputs",
+        data=X_train_features[:3]
+    )
+
+    return study
