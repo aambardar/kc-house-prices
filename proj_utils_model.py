@@ -2,7 +2,7 @@ import numpy as np
 import math
 import optuna
 
-from proj_configs import RANDOM_STATE, PROJECT_NAME
+from proj_configs import RANDOM_STATE, PROJECT_NAME, PATH_OUT_MODELS
 import mlflow
 import base_utils_logging as log_handle
 from sklearn.metrics import mean_squared_error
@@ -554,10 +554,8 @@ def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_v
     experiment.set_name(run_name)
 
     # Log tags
-    experiment.add_tags({
-        "project": PROJECT_NAME,
-        "optimizer_engine": "optuna"
-    })
+    list_of_tags = [f"project:{PROJECT_NAME}", "optimizer_engine:optuna"]
+    experiment.add_tags(list_of_tags)
 
     # Create and optimize Optuna study
     optuna.logging.set_verbosity(LOG_OPTUNA_RUN_LEVEL)
@@ -587,6 +585,8 @@ def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_v
     experiment.log_metric("val_r2", val_r2)
 
     # Log model
-    experiment.log_model("xgb_model", model)
+    model_path = f"{PATH_OUT_MODELS}model.pkl"
+    model.save_model(model_path)
+    experiment.log_model("xgb_model", model_path)
 
     return study
