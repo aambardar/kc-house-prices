@@ -585,8 +585,9 @@ def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_v
     experiment.log_metric("val_r2", val_r2)
 
     # Log model
-    model_path = f"{PATH_OUT_MODELS}model.pkl"
-    model.save_model(model_path)
+    model_file_name = "xgb_model.pkl"
+    model_path = f"{PATH_OUT_MODELS}{model_file_name}"
+    save_model("xgb_model.pkl", PATH_OUT_MODELS, model)
     experiment.log_model("xgb_model", model_path)
 
     return study
