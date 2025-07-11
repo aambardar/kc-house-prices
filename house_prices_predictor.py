@@ -111,7 +111,7 @@ class HousePricePredictor:
         """Train the model using XGBoost with hyperparameter optimization"""
         comet_experiment = comet_ml.Experiment()
         run_base_name = 'xgb-house-prices'
-        run_count = 1
+        run_count = configs.MODEL_RUN_VERSION
         self.run_name = f'{run_base_name}-{run_count}'
 
         try:
