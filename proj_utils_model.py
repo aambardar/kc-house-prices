@@ -1,9 +1,13 @@
 import numpy as np
 import math
+import os
+import joblib
 import optuna
 
 from proj_configs import RANDOM_STATE, PROJECT_NAME, PATH_OUT_MODELS
 import mlflow
+import sqlite3
+from contextlib import contextmanager
 import base_utils_logging as log_handle
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import Lasso
@@ -46,6 +50,57 @@ def update_metrics_snapshot(model_metrics, model_name, model_type, train_mse, va
     model_metrics['val_r2'].append(val_r2)
     model_metrics['test_r2'].append(test_r2)
     log_handle.logger.info("... FINISH")
+
+def get_next_run_counter():
+    """
+    Fetches the last run counter from SQLite, increments it, and returns the new value.
+    Creates the table if it doesn't exist.
+
+    Returns:
+        int: The incremented counter value
+    """
+
+    @contextmanager
+    def get_db_connection():
+        conn = sqlite3.connect('run_counter.db')
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        # Create table if it doesn't exist
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS run_counter
+                       (
+                           id
+                           INTEGER
+                           PRIMARY
+                           KEY,
+                           counter
+                           INTEGER
+                           NOT
+                           NULL
+                       )
+                       ''')
+
+        # Get the current counter value
+        cursor.execute('SELECT counter FROM run_counter WHERE id = 1')
+        result = cursor.fetchone()
+
+        if result is None:
+            # Initialize counter if no record exists
+            new_counter = 1
+            cursor.execute('INSERT INTO run_counter (id, counter) VALUES (1, ?)', (new_counter,))
+        else:
+            # Increment existing counter
+            new_counter = result[0] + 1
+            cursor.execute('UPDATE run_counter SET counter = ? WHERE id = 1', (new_counter,))
+
+        conn.commit()
+        return new_counter
 
 def set_mlflow_uri(uri_value):
     mlflow.set_tracking_uri(uri_value)
@@ -585,9 +640,23 @@ def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_v
     experiment.log_metric("val_r2", val_r2)
 
     # Log model
-    model_file_name = "xgb_model.pkl"
+    model_file_name = f"{run_name}.pkl"
     model_path = f"{PATH_OUT_MODELS}{model_file_name}"
     save_model("xgb_model.pkl", PATH_OUT_MODELS, model)
     experiment.log_model("xgb_model", model_path)
 
     return study
+
+
+def load_optimised_model(model_path: str):
+    try:
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model file not found at {model_path}")
+
+        model = joblib.load(model_path)
+        return model
+
+    except Exception as e:
+        print(f"Error loading model: {str(e)}")
+        print("This might be due to version mismatch or corrupted file")
+        raise

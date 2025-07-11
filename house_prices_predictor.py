@@ -100,10 +100,19 @@ class HousePricePredictor:
             self.tempo_columns
         )
 
+    def transform_data(self):
+        """Transform the data using the preprocessing pipeline"""
+        self.X_train_transformed = self.pproc_pipe.fit_transform(self.X_train)
+        self.X_val_transformed = self.pproc_pipe.transform(self.X_val)
+        self.y_train_transformed = self.y_train.to_numpy()
+        self.y_val_transformed = self.y_val.to_numpy()
+
     def train_model(self):
         """Train the model using XGBoost with hyperparameter optimization"""
         comet_experiment = comet_ml.Experiment()
-        run_name = 'xgb-house-prices'
+        run_base_name = 'xgb-house-prices'
+        run_count = 1
+        self.run_name = f'{run_base_name}-{run_count}'
 
         try:
             self.optimized_study = model_utils.run_hyperparam_tuning_xgb_exp(
@@ -112,18 +121,14 @@ class HousePricePredictor:
                 self.X_val_transformed,
                 self.y_val_transformed,
                 comet_experiment,
-                run_name,
+                self.run_name,
                 configs.OPTUNA_TRIAL_COUNT
             )
         finally:
             comet_experiment.end()
 
-    def transform_data(self):
-        """Transform the data using the preprocessing pipeline"""
-        self.X_train_transformed = self.pproc_pipe.fit_transform(self.X_train)
-        self.X_val_transformed = self.pproc_pipe.transform(self.X_val)
-        self.y_train_transformed = self.y_train.to_numpy()
-        self.y_val_transformed = self.y_val.to_numpy()
+    def load_model(self):
+        self.model = model_utils.load_optimised_model(f"{configs.PATH_OUT_MODELS}{self.run_name}.pkl")
 
     def make_predictions(self):
         """Make predictions on test data"""
@@ -176,6 +181,7 @@ def main():
     predictor.setup_preprocessing()
     predictor.transform_data()
     predictor.train_model()
+    predictor.load_model()
     predictor.make_predictions()
     predictor.save_predictions()
     predictor.evaluate_model()
