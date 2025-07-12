@@ -130,10 +130,13 @@ class HousePricePredictor:
             comet_experiment.end()
 
     def train_model(self):
+        self.tuned_model = model_utils.train_optimal_model(self.optimized_study, self.X_train_transformed, self.y_train_transformed)
         self.tuned_hyperparams = self.optimized_study.best_params
         self.tuned_model = xgboost.XGBRegressor(self.tuned_hyperparams)
         self.tuned_model.fit(self.X_train_transformed, self.y_train_transformed)
         self.logger.info(f"Model trained with best hyperparameters: {self.tuned_hyperparams}")
+
+
 
     def load_model(self):
         self.loaded_model = model_utils.load_optimised_model(f"{configs.PATH_OUT_MODELS}{self.run_name}.pkl")

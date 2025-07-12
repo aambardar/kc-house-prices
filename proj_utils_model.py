@@ -659,3 +659,17 @@ def load_optimised_model(model_path: str):
         print(f"Error loading model: {str(e)}")
         print("This might be due to version mismatch or corrupted file")
         raise
+
+def train_optimal_model(optimised_study, train_features, train_label):
+    model = xgboost.XGBRegressor(**optimised_study.best_params)
+    model.fit(train_features, train_label)
+
+    train_preds = model.predict(train_features)
+    residuals = proj_utils_plots.plot_residuals(train_preds, train_label)
+
+    # Log metrics
+    train_mse = mean_squared_error(train_label, train_preds)
+    train_rmse = math.sqrt(train_mse)
+    train_r2 = r2_score(train_label, train_preds)
+
+    return model
