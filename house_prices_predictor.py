@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import warnings
 import logging
+
+import xgboost
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 import comet_ml
@@ -107,7 +109,7 @@ class HousePricePredictor:
         self.y_train_transformed = self.y_train.to_numpy()
         self.y_val_transformed = self.y_val.to_numpy()
 
-    def train_model(self):
+    def tune_model(self):
         """Train the model using XGBoost with hyperparameter optimization"""
         comet_experiment = comet_ml.Experiment()
         run_base_name = 'xgb-house-prices'
@@ -127,8 +129,14 @@ class HousePricePredictor:
         finally:
             comet_experiment.end()
 
+    def train_model(self):
+        self.tuned_hyperparams = self.optimized_study.best_params
+        self.tuned_model = xgboost.XGBRegressor(self.tuned_hyperparams)
+        self.tuned_model.fit(self.X_train_transformed, self.y_train_transformed)
+        self.logger.info(f"Model trained with best hyperparameters: {self.tuned_hyperparams}")
+
     def load_model(self):
-        self.model = model_utils.load_optimised_model(f"{configs.PATH_OUT_MODELS}{self.run_name}.pkl")
+        self.loaded_model = model_utils.load_optimised_model(f"{configs.PATH_OUT_MODELS}{self.run_name}.pkl")
 
     def make_predictions(self):
         """Make predictions on test data"""
@@ -141,10 +149,10 @@ class HousePricePredictor:
             'Id': self.df_raw_test.Id,
             'SalePrice': self.test_predictions
         })
-
+        submission_file_name = f'{self.run_name}_submission.csv'
         submission_file = os.path.join(
             configs.PATH_OUT_SUBMISSIONS,
-            'submission.csv'
+            submission_file_name
         )
         submission_df.to_csv(submission_file, index=False)
         self.logger.info(f"Predictions saved to {submission_file}")
@@ -180,7 +188,7 @@ def main():
     predictor.create_train_val_split()
     predictor.setup_preprocessing()
     predictor.transform_data()
-    predictor.train_model()
+    predictor.tune_model()
     predictor.load_model()
     predictor.make_predictions()
     predictor.save_predictions()

@@ -642,11 +642,10 @@ def run_hyperparam_tuning_xgb_exp(X_train_features, y_train, X_val_features, y_v
     # Log model
     model_file_name = f"{run_name}.pkl"
     model_path = f"{PATH_OUT_MODELS}{model_file_name}"
-    save_model("xgb_model.pkl", PATH_OUT_MODELS, model)
-    experiment.log_model("xgb_model", model_path)
+    save_model(model_file_name, PATH_OUT_MODELS, model)
+    experiment.log_model(run_name, model_path)
 
     return study
-
 
 def load_optimised_model(model_path: str):
     try:
