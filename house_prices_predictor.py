@@ -101,6 +101,11 @@ class HousePricePredictor:
             self.cat_columns,
             self.tempo_columns
         )
+        self.pproc_pipe_full_train = feat_engg.create_pproc_pipeline(
+            self.num_columns,
+            self.cat_columns,
+            self.tempo_columns
+        )
 
     def transform_data(self):
         """Transform the data using the preprocessing pipeline"""
@@ -108,6 +113,9 @@ class HousePricePredictor:
         self.X_val_transformed = self.pproc_pipe.transform(self.X_val)
         self.y_train_transformed = self.y_train.to_numpy()
         self.y_val_transformed = self.y_val.to_numpy()
+
+        self.train_transformed = self.pproc_pipe_full_train.fit_transform(self.df_train)
+        self.train_labels_transformed = self.df_raw_target.to_numpy()
 
     def tune_model(self):
         """Train the model using XGBoost with hyperparameter optimization"""
@@ -126,25 +134,20 @@ class HousePricePredictor:
                 self.run_name,
                 configs.OPTUNA_TRIAL_COUNT
             )
+            self.tuned_model = model_utils.train_optimal_model(self.optimized_study, self.train_transformed, self.train_labels_transformed, comet_experiment)
+            model_file_name = f'{self.run_name}.pkl'
+            model_utils.save_model(model_file_name, configs.PATH_OUT_MODELS, self.tuned_model)
+            comet_experiment.log_model(self.run_name, f"{configs.PATH_OUT_MODELS}{model_file_name}")
         finally:
             comet_experiment.end()
-
-    def train_model(self):
-        self.tuned_model = model_utils.train_optimal_model(self.optimized_study, self.X_train_transformed, self.y_train_transformed)
-        self.tuned_hyperparams = self.optimized_study.best_params
-        self.tuned_model = xgboost.XGBRegressor(self.tuned_hyperparams)
-        self.tuned_model.fit(self.X_train_transformed, self.y_train_transformed)
-        self.logger.info(f"Model trained with best hyperparameters: {self.tuned_hyperparams}")
-
-
 
     def load_model(self):
         self.loaded_model = model_utils.load_optimised_model(f"{configs.PATH_OUT_MODELS}{self.run_name}.pkl")
 
     def make_predictions(self):
         """Make predictions on test data"""
-        self.test_transformed = self.pproc_pipe.transform(self.df_test)
-        self.test_predictions = self.model.predict(self.test_transformed)
+        self.test_transformed = self.pproc_pipe_full_train.transform(self.df_test)
+        self.test_predictions = self.tuned_model.predict(self.test_transformed)
 
     def save_predictions(self):
         """Save predictions to a CSV file"""
@@ -160,26 +163,26 @@ class HousePricePredictor:
         submission_df.to_csv(submission_file, index=False)
         self.logger.info(f"Predictions saved to {submission_file}")
 
-    def evaluate_model(self):
-        """Evaluate model performance"""
-        train_preds = self.model.predict(self.X_train_transformed)
-        val_preds = self.model.predict(self.X_val_transformed)
-
-        train_mse = round(mean_squared_error(self.y_train_transformed, train_preds), 5)
-        val_mse = round(mean_squared_error(self.y_val_transformed, val_preds), 5)
-        train_r2 = round(r2_score(self.y_train_transformed, train_preds), 5)
-        val_r2 = round(r2_score(self.y_val_transformed, val_preds), 5)
-
-        self.logger.info("=== Model Performance ===")
-        self.logger.info(f"Train MSE: {train_mse}, Train R2: {train_r2}")
-        self.logger.info(f"Validation MSE: {val_mse}, Validation R2: {val_r2}")
-
-        metrics_string = (f'=== Model Performance === \n'
-                          f'Train MSE: {train_mse}, Train R2: {train_r2} \n'
-                          f'Validation MSE: {val_mse}, Validation R2: {val_r2}')
-
-        utils.save_file('metrics', 'validation_metrics.txt',
-                        configs.PATH_OUT_MODELS, metrics_string)
+    # def evaluate_model(self):
+    #     """Evaluate model performance"""
+    #     train_preds = self.tuned_model.predict(self.X_train_transformed)
+    #     val_preds = self.tuned_model.predict(self.X_val_transformed)
+    #
+    #     train_mse = round(mean_squared_error(self.y_train_transformed, train_preds), 5)
+    #     val_mse = round(mean_squared_error(self.y_val_transformed, val_preds), 5)
+    #     train_r2 = round(r2_score(self.y_train_transformed, train_preds), 5)
+    #     val_r2 = round(r2_score(self.y_val_transformed, val_preds), 5)
+    #
+    #     self.logger.info("=== Model Performance ===")
+    #     self.logger.info(f"Train MSE: {train_mse}, Train R2: {train_r2}")
+    #     self.logger.info(f"Validation MSE: {val_mse}, Validation R2: {val_r2}")
+    #
+    #     metrics_string = (f'=== Model Performance === \n'
+    #                       f'Train MSE: {train_mse}, Train R2: {train_r2} \n'
+    #                       f'Validation MSE: {val_mse}, Validation R2: {val_r2}')
+    #
+    #     utils.save_file('metrics', 'validation_metrics.txt',
+    #                     configs.PATH_OUT_MODELS, metrics_string)
 
 
 def main():
@@ -195,8 +198,7 @@ def main():
     predictor.load_model()
     predictor.make_predictions()
     predictor.save_predictions()
-    predictor.evaluate_model()
-
+    # predictor.evaluate_model()
 
 if __name__ == "__main__":
     main()
