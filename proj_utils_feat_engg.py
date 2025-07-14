@@ -61,7 +61,7 @@ class YearTransformer(BaseEstimator, TransformerMixin):
 
 
 def get_cols_as_tuple(feat_categories):
-    logger.info("START ...")
+    logger.debug("START ...")
     cols_num_continuous = feat_categories.get("numerical_continuous")
     n_num_continuous = len(cols_num_continuous)
 
@@ -86,7 +86,7 @@ def get_cols_as_tuple(feat_categories):
     cols_low_cardinality = feat_categories.get("low_cardinality")
     n_low_cardinality = len(cols_low_cardinality)
 
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
     return (cols_num_continuous, n_num_continuous, cols_num_discrete, n_num_discrete, cols_cat_nominal, n_cat_nominal,
             cols_cat_ordinal, n_cat_ordinal, cols_object, n_object, cols_temporal, n_temporal, cols_binary, n_binary, cols_low_cardinality, n_low_cardinality)
@@ -113,7 +113,7 @@ def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[
         ('numerical_continuous', 'numerical_discrete', 'categorical_nominal',
         'categorical_ordinal', 'object', 'temporal', and 'binary').
     """
-    logger.info("START ...")
+    logger.debug("START ...")
     feature_types = {
         'numerical_continuous': [],
         'numerical_discrete': [],
@@ -209,7 +209,7 @@ def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[
         logger.debug(f"{ftype.title()} Features ({len(features)}):")
         logger.debug(features)
 
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
     return feature_types
 
 
@@ -222,19 +222,19 @@ def get_cardinality_df(df):
     #     df_cardinality.loc[len(df_cardinality)] = [col, round(1-df_raw[col].isnull().sum()/df_raw.shape[0], 3), round(df_raw[col].isnull().sum()/df_raw.shape[0], 3), round(df_raw[col].nunique()/df_raw.shape[0], 3)]
 
     # Iteration 2 was further optimised used vectorised operations
-    logger.info("START ...")
+    logger.debug("START ...")
     df_cardinality = pd.DataFrame({
         'col_name': df.columns,
         'notnull_pct': (1 - df.isnull().sum() / df.shape[0]).round(3),
         'null_pct': (df.isnull().sum() / df.shape[0]).round(3),
         'unique_pct': (df.nunique() / df.shape[0]).round(3)
     })
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
     return df_cardinality
 
 
 def create_pproc_pipeline(cols_num, cols_cat, cols_temporal):
-    logger.info("START ...")
+    logger.debug("START ...")
     # imputer to replace nulls with the most frequent value
     imputer_cat_freq = SimpleImputer(strategy='most_frequent')
     # imputer to replace nulls with the most frequent value
@@ -284,22 +284,22 @@ def create_pproc_pipeline(cols_num, cols_cat, cols_temporal):
         ],
         remainder='passthrough'
     )
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
     return preprocessor
 
 
 def create_final_pipeline(pproc_pipe, model):
-    logger.info("START ...")
+    logger.debug("START ...")
     # Create a full pipeline with preprocessing and model
     final_pipe = Pipeline(steps=[
         ('preprocessor', pproc_pipe),
         ('regressor', model)  # alpha parameter controls regularization strength
     ])
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
     return final_pipe
 
 def get_final_features(final_pipeline, X_train):
-    logger.info("START ...")
+    logger.debug("START ...")
     feature_names = []
     column_names = []
     pproc = final_pipeline.named_steps['preprocessor']
@@ -345,4 +345,4 @@ def get_final_features(final_pipeline, X_train):
     print(
         f'\nThe total feature space has: {proj_utils_plots.beautify(str(len(feature_names)))} features. Their names being:\n{proj_utils_plots.beautify(str(feature_names), 2)}')
     return column_names, feature_names
-    logger.info("... FINISH")
+    logger.debug("... FINISH")

@@ -6,29 +6,29 @@ logger = get_logger()
 
 def load_data(data_file_path, is_col_refactor_needed):
     try:
-        logger.info("START ...")
+        logger.debug("START ...")
         logger.debug(f'Loading data from path: {data_file_path}')
         df_data = pd.read_csv(data_file_path)
         logger.debug(f'Loaded train data with shape: {df_data.shape}')
         logger.debug(f'Successfully loaded data from path: {data_file_path}')
         if is_col_refactor_needed:
             df_data = refactor_col_names(df_data)
-        logger.info("... FINISH")
+        logger.debug("... FINISH")
         return df_data
     except Exception as e:
         logger.error(f'Failed to load data from {data_file_path}: {str(e)}')
         raise
 
 def refactor_col_names(df: pd.DataFrame):
-    logger.info("START ...")
+    logger.debug("START ...")
     df.columns = df.columns.str.replace(' ', '')
     df = df.rename(columns={'YearRemod/Add': 'YearRemodAdd'})
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
     return df
 
 def merge_train_test_data(train_df: pd.DataFrame, test_df: pd.DataFrame, cols_to_drop: list, target_label: str):
     try:
-        logger.info("START ...")
+        logger.debug("START ...")
         logger.debug(f'Merging train data shape: {train_df.shape} and test data shape: {test_df.shape}')
 
         # Create indicator column
@@ -48,7 +48,7 @@ def merge_train_test_data(train_df: pd.DataFrame, test_df: pd.DataFrame, cols_to
         # Merge dataframes
         merged_df = pd.concat([train_df, test_df], axis=0)
         logger.debug(f'Merged data shape: {merged_df.shape}')
-        logger.info("... FINISH")
+        logger.debug("... FINISH")
 
         return merged_df, train_target
     except Exception as e:

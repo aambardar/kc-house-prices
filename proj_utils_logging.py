@@ -44,7 +44,7 @@ def setup_logging():
     logger.addHandler(console_handler)
 
     # Log initial message to verify setup
-    logger.info("Logging system initialised")
+    logger.debug("Logging system initialised")
 
     return logger
 

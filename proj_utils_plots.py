@@ -42,16 +42,16 @@ def beautify(str_to_print: str, format_type: int = 0) -> str:
     return f"{color_map[format_type]}{str_to_print}{custColour.res}"
 
 def display_plot_link(filename, base_dir='plots'):
-    logger.info("START ...")
+    logger.debug("START ...")
     filepath = os.path.join(base_dir, filename)
     if os.path.exists(filepath):
         display(FileLink(filepath))
     else:
         print(f"File {filepath} not found")
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 def plot_cardinality(cardinality_df, n_cat_threshold, threshold_used='ABS', type_of_cols='all', figsize=(10, 6)):
-    logger.info("START ...")
+    logger.debug("START ...")
     stack_colours = ['#deffd4', '#ffffff']
 
     # Bar plot
@@ -81,12 +81,12 @@ def plot_cardinality(cardinality_df, n_cat_threshold, threshold_used='ABS', type
     plt.legend(bbox_to_anchor=(1.0, 0))
     proj_utils.save_and_show_link(fig, f'plot_cardinality_{type_of_cols}_{proj_utils.get_current_timestamp()}.png')
     plt.close(fig)
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 def plot_numerical_distribution(df, features):
-    logger.info("START ...")
+    logger.debug("START ...")
     if features is None or len(features) == 0:
-        logger.info("... FINISH")
+        logger.debug("... FINISH")
         return
 
     # Calculate the number of rows and columns needed
@@ -156,12 +156,12 @@ def plot_numerical_distribution(df, features):
 
         plt.tight_layout()
         plt.show()
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 def plot_categorical_distribution(df, features):
-    logger.info("START ...")
+    logger.debug("START ...")
     if features is None or len(features) == 0:
-        logger.info("... FINISH")
+        logger.debug("... FINISH")
         return
 
     # Calculate the number of rows and columns needed
@@ -190,12 +190,12 @@ def plot_categorical_distribution(df, features):
     # plt.show()
     proj_utils.save_and_show_link(fig, f'plot_cat_distro_{n_features}feats_{proj_utils.get_current_timestamp()}.png')
     plt.close(fig)
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 def plot_relationship_to_target(df, features, target, trend_type=None):
-    logger.info("START ...")
+    logger.debug("START ...")
     if features is None or len(features) == 0:
-        logger.info("... FINISH")
+        logger.debug("... FINISH")
         return
 
     n_features = len(features)
@@ -270,13 +270,13 @@ def plot_relationship_to_target(df, features, target, trend_type=None):
     # plt.show()
     proj_utils.save_and_show_link(fig, f'plot_relate_{n_features}feats_to_target_{target}_{proj_utils.get_current_timestamp()}.png')
     plt.close(fig)
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 
 def plot_metrics_snapshot(model_metrics, model_type=None):
-    logger.info("START ...")
+    logger.debug("START ...")
     if model_metrics is None or len(model_metrics) == 0:
-        logger.info("... FINISH")
+        logger.debug("... FINISH")
         return
 
     df_metrics = pd.DataFrame(model_metrics)
@@ -302,7 +302,7 @@ def plot_metrics_snapshot(model_metrics, model_type=None):
 
     proj_utils.save_and_show_link(fig, f'plot_metrics_{proj_utils.get_current_timestamp()}.png')
     plt.close(fig)
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 def plot_correlation_with_target(df, target):
     """
@@ -315,7 +315,7 @@ def plot_correlation_with_target(df, target):
     Returns:
     - None (Displays the plot on a Jupyter window)
     """
-    logger.info("START ...")
+    logger.debug("START ...")
     # Compute correlations between all variables and 'demand'
     correlations = df.corr()[target].drop(target).sort_values()
 
@@ -354,7 +354,7 @@ def plot_correlation_with_target(df, target):
 
     # prevent matplotlib from displaying the chart every time we call this function
     plt.close(fig)
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
     return fig
 

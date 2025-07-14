@@ -10,7 +10,7 @@ from proj_utils_logging import get_logger
 logger = get_logger()
 
 def save_and_show_link(fig_to_save, filename, base_dir=PATH_OUT_VISUALS, dpi=100):
-    logger.info("START ...")
+    logger.debug("START ...")
     os.makedirs(base_dir, exist_ok=True)
 
     # Get absolute paths
@@ -27,16 +27,16 @@ def save_and_show_link(fig_to_save, filename, base_dir=PATH_OUT_VISUALS, dpi=100
     # Display a link to the saved figure
     display(FileLink(full_filepath))
     # display(HTML(full_filepath))
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
 
 def get_current_timestamp():
-    logger.info("START ...")
+    logger.debug("START ...")
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
     return timestamp
 
 def save_file(file_type_to_save, filename, base_dir_path, data):
-    logger.info("START ...")
+    logger.debug("START ...")
     os.makedirs(base_dir_path, exist_ok=True)
 
     # Get absolute paths
@@ -69,4 +69,4 @@ def save_file(file_type_to_save, filename, base_dir_path, data):
     else:
         logger.debug(f'No matching FILE TYPE found for: {file_type_to_save}')
 
-    logger.info("... FINISH")
+    logger.debug("... FINISH")
