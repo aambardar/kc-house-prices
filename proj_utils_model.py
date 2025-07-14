@@ -139,20 +139,20 @@ def champion_callback(study, frozen_trial):
         study.set_user_attr("winner", study.best_value)
         if winner:
             improvement_percent = (abs(winner - study.best_value) / study.best_value) * 100
-            print(f"=" * 50)
-            print(
+            logger.info(f"=" * 50)
+            logger.info(
                 f"Trial {frozen_trial.number} achieved value: {frozen_trial.value} with "
                 f"{improvement_percent: .4f}% improvement"
             )
-            print(f"=" * 50)
+            logger.info(f"=" * 50)
         else:
-            print(f"="*50)
-            print(
+            logger.info(f"=" * 50)
+            logger.info(
                 f"Trial {frozen_trial.number} achieved value: {frozen_trial.value} with "
                 f"no improvement"
             )
-            print(f"Initial trial {frozen_trial.number} achieved value: {frozen_trial.value}")
-            print(f"=" * 50)
+            logger.info(f"Initial trial {frozen_trial.number} achieved value: {frozen_trial.value}")
+            logger.info(f"=" * 50)
     logger.debug("... FINISH")
 
 def run_hyperparam_tuning_lasso(X_train, y_train, X_val, y_val, pproc_pipeline, experiment_id, run_name, artefact_path, num_trials):
