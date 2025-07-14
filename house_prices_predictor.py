@@ -32,14 +32,14 @@ class HousePricePredictor:
 
     def setup_environment(self):
         """Initialize environment settings and configurations"""
+        self.logger.info("START ...")
         warnings.filterwarnings("ignore", category=UserWarning)
         logging.getLogger("mlflow").setLevel(logging.ERROR)
+        self.logger.info("... FINISH")
 
     def load_data(self):
         """Load and prepare the training and test datasets"""
-        log_handle.logger.info("START ...")
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
-        log_handle.logger.info("... FINISH")
+        self.logger.info("START ...")
         self.df_raw_train = data_loader.load_data(configs.TRAIN_FILE, True)
         self.df_raw_test = data_loader.load_data(configs.TEST_FILE, True)
 
@@ -53,9 +53,11 @@ class HousePricePredictor:
                              'HeatingQC', 'KitchenQual', 'FireplaceQu', 'GarageQual',
                              'GarageCond', 'PoolQC']
         self.temporal_cols_name_pattern = ['Yr', 'Year']
+        self.logger.info("... FINISH")
 
     def prepare_data(self):
         """Prepare and process the data for modeling"""
+        self.logger.info("START ...")
         # Merge train and test data
         self.df_raw_all, self.df_raw_target = data_loader.merge_train_test_data(
             self.df_raw_train,
@@ -83,18 +85,22 @@ class HousePricePredictor:
          self.cols_cat_nominal, _, self.cols_cat_ordinal, _,
          self.cols_object, _, self.cols_temporal, _,
          self.cols_binary, _, self.cols_low_cardinality, _) = feat_engg.get_cols_as_tuple(self.feature_categories)
+        self.logger.info("... FINISH")
 
     def create_train_val_split(self):
         """Create training and validation splits"""
+        self.logger.info("START ...")
         self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(
             self.df_train,
             self.df_raw_target,
             test_size=configs.VALIDATION_SIZE,
             random_state=configs.RANDOM_STATE
         )
+        self.logger.info("... FINISH")
 
     def setup_preprocessing(self):
         """Setup the preprocessing pipeline"""
+        self.logger.info("START ...")
         self.num_columns = self.cols_num_continuous
         self.cat_columns = (self.cols_cat_nominal + self.cols_cat_ordinal +
                             self.cols_num_discrete + self.cols_binary + self.cols_object)
@@ -110,9 +116,11 @@ class HousePricePredictor:
             self.cat_columns,
             self.tempo_columns
         )
+        self.logger.info("... FINISH")
 
     def transform_data(self):
         """Transform the data using the preprocessing pipeline"""
+        self.logger.info("START ...")
         self.X_train_transformed = self.pproc_pipe.fit_transform(self.X_train)
         self.X_val_transformed = self.pproc_pipe.transform(self.X_val)
         self.y_train_transformed = self.y_train.to_numpy()
@@ -120,9 +128,11 @@ class HousePricePredictor:
 
         self.train_transformed = self.pproc_pipe_full_train.fit_transform(self.df_train)
         self.train_labels_transformed = self.df_raw_target.to_numpy()
+        self.logger.info("... FINISH")
 
     def tune_model(self):
         """Train the model using XGBoost with hyperparameter optimization"""
+        self.logger.info("START ...")
         comet_experiment = comet_ml.Experiment()
         run_base_name = 'xgb-house-prices'
         run_count = configs.MODEL_RUN_VERSION
@@ -144,17 +154,23 @@ class HousePricePredictor:
             comet_experiment.log_model(self.run_name, f"{configs.PATH_OUT_MODELS}{model_file_name}")
         finally:
             comet_experiment.end()
+        self.logger.info("... FINISH")
 
     def load_model(self):
+        self.logger.info("START ...")
         self.loaded_model = model_utils.load_optimised_model(f"{configs.PATH_OUT_MODELS}{self.run_name}.pkl")
+        self.logger.info("... FINISH")
 
     def make_predictions(self):
         """Make predictions on test data"""
+        self.logger.info("START ...")
         self.test_transformed = self.pproc_pipe_full_train.transform(self.df_test)
         self.test_predictions = self.tuned_model.predict(self.test_transformed)
+        self.logger.info("... FINISH")
 
     def save_predictions(self):
         """Save predictions to a CSV file"""
+        self.logger.info("START ...")
         submission_df = pd.DataFrame({
             'Id': self.df_raw_test.Id,
             'SalePrice': self.test_predictions
@@ -165,44 +181,30 @@ class HousePricePredictor:
             submission_file_name
         )
         submission_df.to_csv(submission_file, index=False)
-        self.logger.info(f"Predictions saved to {submission_file}")
-
-    # def evaluate_model(self):
-    #     """Evaluate model performance"""
-    #     train_preds = self.tuned_model.predict(self.X_train_transformed)
-    #     val_preds = self.tuned_model.predict(self.X_val_transformed)
-    #
-    #     train_mse = round(mean_squared_error(self.y_train_transformed, train_preds), 5)
-    #     val_mse = round(mean_squared_error(self.y_val_transformed, val_preds), 5)
-    #     train_r2 = round(r2_score(self.y_train_transformed, train_preds), 5)
-    #     val_r2 = round(r2_score(self.y_val_transformed, val_preds), 5)
-    #
-    #     self.logger.info("=== Model Performance ===")
-    #     self.logger.info(f"Train MSE: {train_mse}, Train R2: {train_r2}")
-    #     self.logger.info(f"Validation MSE: {val_mse}, Validation R2: {val_r2}")
-    #
-    #     metrics_string = (f'=== Model Performance === \n'
-    #                       f'Train MSE: {train_mse}, Train R2: {train_r2} \n'
-    #                       f'Validation MSE: {val_mse}, Validation R2: {val_r2}')
-    #
-    #     utils.save_file('metrics', 'validation_metrics.txt',
-    #                     configs.PATH_OUT_MODELS, metrics_string)
-
+        self.logger.debug(f"Predictions saved to {submission_file}")
+        self.logger.info("... FINISH")
 
 def main():
-    predictor = HousePricePredictor()
+    logger = log_utils.get_logger()
+    logger.info("START ...")
+    logger.debug("Initialising MAIN class")
 
-    # Pipeline execution
-    predictor.load_data()
-    predictor.prepare_data()
-    predictor.create_train_val_split()
-    predictor.setup_preprocessing()
-    predictor.transform_data()
-    predictor.tune_model()
-    predictor.load_model()
-    predictor.make_predictions()
-    predictor.save_predictions()
-    # predictor.evaluate_model()
+    try:
+        predictor = HousePricePredictor()
+        predictor.load_data()
+        predictor.prepare_data()
+        predictor.create_train_val_split()
+        predictor.setup_preprocessing()
+        predictor.transform_data()
+        predictor.tune_model()
+        predictor.load_model()
+        predictor.make_predictions()
+        predictor.save_predictions()
+        # predictor.evaluate_model()
+    except Exception as e:
+        logger.error(f"MAIN pipeline failed: {str(e)}")
+        raise
+    logger.info("... FINISH")
 
 if __name__ == "__main__":
     main()

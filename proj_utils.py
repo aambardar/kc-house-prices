@@ -1,15 +1,16 @@
 import matplotlib.pyplot as plt
 import os
-from IPython.display import HTML, display, FileLink
+from IPython.display import display, FileLink
 from datetime import datetime
 import joblib
 
-from proj_configs import MPL_STYLE_FILE, PATH_OUT_VISUALS
-import base_utils_logging as log_handle
+from proj_configs import PATH_OUT_VISUALS
+from proj_utils_logging import get_logger
 
+logger = get_logger()
 
 def save_and_show_link(fig_to_save, filename, base_dir=PATH_OUT_VISUALS, dpi=100):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     os.makedirs(base_dir, exist_ok=True)
 
     # Get absolute paths
@@ -26,16 +27,16 @@ def save_and_show_link(fig_to_save, filename, base_dir=PATH_OUT_VISUALS, dpi=100
     # Display a link to the saved figure
     display(FileLink(full_filepath))
     # display(HTML(full_filepath))
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
 
 def get_current_timestamp():
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
     return timestamp
 
 def save_file(file_type_to_save, filename, base_dir_path, data):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     os.makedirs(base_dir_path, exist_ok=True)
 
     # Get absolute paths
@@ -44,16 +45,16 @@ def save_file(file_type_to_save, filename, base_dir_path, data):
     full_filepath = os.path.join(full_base_dir, filename)
 
     if file_type_to_save == 'feature':
-        log_handle.logger.info(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
+        logger.debug(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
         data.to_csv(full_filepath, index=False, header=False)
     elif file_type_to_save == 'model':
-        log_handle.logger.info(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
+        logger.debug(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
         joblib.dump(data, full_filepath)
     elif file_type_to_save == 'hyperparams':
-        log_handle.logger.info(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
+        logger.debug(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
         data.to_csv(full_filepath, index=False)
     elif file_type_to_save == 'metrics':
-        log_handle.logger.info(f'Saving metrics into file {filename} at path {full_filepath}')
+        logger.debug(f'Saving metrics into file {filename} at path {full_filepath}')
         # Check if a file exists
         if os.path.exists(full_filepath):
             # File exists, append content
@@ -66,6 +67,6 @@ def save_file(file_type_to_save, filename, base_dir_path, data):
                 file.write(data)
             print(f"New file created with content: {full_filepath}")
     else:
-        log_handle.logger.info(f'No matching FILE TYPE found for: {file_type_to_save}')
+        logger.debug(f'No matching FILE TYPE found for: {file_type_to_save}')
 
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")

@@ -8,7 +8,6 @@ from proj_configs import RANDOM_STATE, PROJECT_NAME, PATH_OUT_MODELS
 import mlflow
 import sqlite3
 from contextlib import contextmanager
-import base_utils_logging as log_handle
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import Lasso
 from sklearn.ensemble import RandomForestClassifier
@@ -20,10 +19,13 @@ import proj_utils
 import proj_utils_plots
 import proj_utils_feat_engg
 
+from proj_utils_logging import get_logger
+logger = get_logger()
+
 LOG_OPTUNA_RUN_LEVEL= optuna.logging.ERROR
 
 def create_metrics_snapshot():
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     model_metrics = {
         'iteration': [],
         'model_name': [],
@@ -35,11 +37,11 @@ def create_metrics_snapshot():
         'val_r2': [],
         'test_r2': [],
     }
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
     return model_metrics
 
 def update_metrics_snapshot(model_metrics, model_name, model_type, train_mse, val_mse, test_mse, train_r2, val_r2, test_r2):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     model_metrics['iteration'].append(len(model_metrics['iteration']) + 1)
     model_metrics['model_name'].append(model_name)
     model_metrics['model_type'].append(model_type)
@@ -49,7 +51,7 @@ def update_metrics_snapshot(model_metrics, model_name, model_type, train_mse, va
     model_metrics['train_r2'].append(train_r2)
     model_metrics['val_r2'].append(val_r2)
     model_metrics['test_r2'].append(test_r2)
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
 
 def get_next_run_counter():
     """
@@ -115,22 +117,22 @@ def get_or_create_experiment(experiment_name):
         return mlflow.create_experiment(experiment_name)
 
 def save_features(filename, base_dir_path, features):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     proj_utils.save_file('feature', filename, base_dir_path, features)
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
 
 def save_model(filename, base_dir_path, model):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     proj_utils.save_file('model', filename, base_dir_path, model)
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
 
 def save_hyperparams(filename, base_dir_path, hyperparams):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     proj_utils.save_file('hyperparams', filename, base_dir_path, hyperparams)
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
 
 def champion_callback(study, frozen_trial):
-    log_handle.logger.info("START ...")
+    logger.info("START ...")
     winner = study.user_attrs.get("winner", None)
 
     if study.best_value and winner != study.best_value:
@@ -151,7 +153,7 @@ def champion_callback(study, frozen_trial):
             )
             print(f"Initial trial {frozen_trial.number} achieved value: {frozen_trial.value}")
             print(f"=" * 50)
-    log_handle.logger.info("... FINISH")
+    logger.info("... FINISH")
 
 def run_hyperparam_tuning_lasso(X_train, y_train, X_val, y_val, pproc_pipeline, experiment_id, run_name, artefact_path, num_trials):
     def optuna_objective(trial):
