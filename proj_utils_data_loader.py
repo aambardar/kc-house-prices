@@ -2,13 +2,15 @@
 import pandas as pd
 import base_utils_logging as log_handle
 
-def load_data(data_file_path):
+def load_data(data_file_path, is_col_refactor_needed):
     try:
         log_handle.logger.info("START ...")
         log_handle.logger.info(f'Loading data from path: {data_file_path}')
         df_data = pd.read_csv(data_file_path)
         log_handle.logger.info(f'Loaded train data with shape: {df_data.shape}')
         log_handle.logger.info(f'Successfully loaded data from path: {data_file_path}')
+        if is_col_refactor_needed:
+            df_data = refactor_col_names(df_data)
         log_handle.logger.info("... FINISH")
         return df_data
     except Exception as e:

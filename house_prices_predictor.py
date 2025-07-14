@@ -36,8 +36,8 @@ class HousePricePredictor:
 
     def load_data(self):
         """Load and prepare the training and test datasets"""
-        self.df_raw_train = data_loader.load_data(configs.TRAIN_FILE)
-        self.df_raw_test = data_loader.load_data(configs.TEST_FILE)
+        self.df_raw_train = data_loader.load_data(configs.TRAIN_FILE, True)
+        self.df_raw_test = data_loader.load_data(configs.TEST_FILE, True)
 
         # Define column categories
         self.insignificant_cols = ['Id']
@@ -78,7 +78,7 @@ class HousePricePredictor:
         (self.cols_num_continuous, _, self.cols_num_discrete, _,
          self.cols_cat_nominal, _, self.cols_cat_ordinal, _,
          self.cols_object, _, self.cols_temporal, _,
-         self.cols_binary, _) = feat_engg.get_cols_as_tuple(self.feature_categories)
+         self.cols_binary, _, self.cols_low_cardinality, _) = feat_engg.get_cols_as_tuple(self.feature_categories)
 
     def create_train_val_split(self):
         """Create training and validation splits"""

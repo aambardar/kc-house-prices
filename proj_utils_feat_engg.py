@@ -81,10 +81,13 @@ def get_cols_as_tuple(feat_categories):
     cols_binary = feat_categories.get("binary")
     n_binary = len(cols_binary)
 
+    cols_low_cardinality = feat_categories.get("low_cardinality")
+    n_low_cardinality = len(cols_low_cardinality)
+
     log_handle.logger.info("... FINISH")
 
     return (cols_num_continuous, n_num_continuous, cols_num_discrete, n_num_discrete, cols_cat_nominal, n_cat_nominal,
-            cols_cat_ordinal, n_cat_ordinal, cols_object, n_object, cols_temporal, n_temporal, cols_binary, n_binary)
+            cols_cat_ordinal, n_cat_ordinal, cols_object, n_object, cols_temporal, n_temporal, cols_binary, n_binary, cols_low_cardinality, n_low_cardinality)
 
 
 def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[], temporal_cols_name_pattern=[],
@@ -116,7 +119,8 @@ def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[
         'categorical_ordinal': [],
         'object': [],
         'temporal': [],
-        'binary': []
+        'binary': [],
+        'low_cardinality': []
     }
 
     for column in df.columns:
@@ -193,6 +197,10 @@ def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[
         else:
             log_handle.logger.warning(f'Matching Col Type Not Found for: {column}')
             feature_types['object'].append(column)
+
+    feature_types['low_cardinality'] = [cname for cname in df.columns
+                        if df[cname].nunique() < n_cat_threshold and
+                        df[cname].dtype == "object"]
 
     log_handle.logger.info("Feature Type Summary:")
     for ftype, features in feature_types.items():
