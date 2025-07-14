@@ -26,7 +26,7 @@ def setup_logging():
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     console_formatter = logging.Formatter(
-        '[%(levelname)s] %(message)s'
+        '[%(levelname)s][%(funcName)s] %(message)s'
     )
 
     # Create and configure file handler

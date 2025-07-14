@@ -197,7 +197,7 @@ def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[
                 else:
                     feature_types['object'].append(column)
         else:
-            logger.warning(f'Matching Col Type Not Found for: {column}')
+            logger.warning(f'Matching Col Type Not Found for: {column}, so casting as Object type.')
             feature_types['object'].append(column)
 
     feature_types['low_cardinality'] = [cname for cname in df.columns
