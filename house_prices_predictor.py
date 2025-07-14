@@ -183,11 +183,6 @@ class HousePricePredictor:
         self.logger.info("... FINISH")
 
 def main():
-    logger = log_utils.get_logger()
-    logger.info("START ...")
-    logger.debug("Initialising MAIN class")
-
-    try:
         predictor = HousePricePredictor()
         predictor.load_data()
         predictor.prepare_data()
@@ -199,10 +194,6 @@ def main():
         predictor.make_predictions()
         predictor.save_predictions()
         # predictor.evaluate_model()
-    except Exception as e:
-        logger.error(f"MAIN pipeline failed: {str(e)}")
-        raise
-    logger.info("... FINISH")
 
 if __name__ == "__main__":
     main()
