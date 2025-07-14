@@ -21,13 +21,14 @@ import proj_utils_data_loader as data_loader
 import proj_utils_feat_engg as feat_engg
 import proj_utils_model as model_utils
 import proj_utils_plots as plot_utils
-import base_utils_logging as log_utils
+import proj_utils_logging as log_utils
 
 
 class HousePricePredictor:
     def __init__(self):
         self.setup_environment()
-        self.logger = log_utils.setup_logging()
+        self.logger = log_utils.get_logger()
+        self.logger.info(f"Initialised logging for {configs.PROJECT_NAME} project.")
 
     def setup_environment(self):
         """Initialize environment settings and configurations"""
@@ -36,6 +37,9 @@ class HousePricePredictor:
 
     def load_data(self):
         """Load and prepare the training and test datasets"""
+        log_handle.logger.info("START ...")
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
+        log_handle.logger.info("... FINISH")
         self.df_raw_train = data_loader.load_data(configs.TRAIN_FILE, True)
         self.df_raw_test = data_loader.load_data(configs.TEST_FILE, True)
 
