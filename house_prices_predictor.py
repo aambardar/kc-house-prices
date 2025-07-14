@@ -135,7 +135,7 @@ class HousePricePredictor:
         run_base_name = 'xgb-house-prices'
         run_count = configs.MODEL_RUN_VERSION
         self.run_name = f'{run_base_name}-{run_count}'
-
+        self.logger.info(f"Run name starts: {self.run_name} under Experiment: {comet_experiment.project_name}/{comet_experiment.workspace}")
         try:
             self.optimized_study = model_utils.run_hyperparam_tuning_xgb_exp(
                 self.X_train_transformed,
@@ -146,12 +146,14 @@ class HousePricePredictor:
                 self.run_name,
                 configs.OPTUNA_TRIAL_COUNT
             )
+            self.logger.info(f"Optimised study best params: {self.optimized_study.best_params}")
             self.tuned_model = model_utils.train_optimal_model(self.optimized_study, self.train_transformed, self.train_labels_transformed, comet_experiment)
             model_file_name = f'{self.run_name}.pkl'
             model_utils.save_model(model_file_name, configs.PATH_OUT_MODELS, self.tuned_model)
             comet_experiment.log_model(self.run_name, f"{configs.PATH_OUT_MODELS}{model_file_name}")
         finally:
             comet_experiment.end()
+            self.logger.info(f"Run name ends: {self.run_name}")
         self.logger.debug("... FINISH")
 
     def load_model(self):
