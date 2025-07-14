@@ -32,10 +32,8 @@ class HousePricePredictor:
 
     def setup_environment(self):
         """Initialize environment settings and configurations"""
-        self.logger.info("START ...")
         warnings.filterwarnings("ignore", category=UserWarning)
         logging.getLogger("mlflow").setLevel(logging.ERROR)
-        self.logger.info("... FINISH")
 
     def load_data(self):
         """Load and prepare the training and test datasets"""
