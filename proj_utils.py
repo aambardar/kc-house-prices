@@ -45,16 +45,16 @@ def save_file(file_type_to_save, filename, base_dir_path, data):
     full_filepath = os.path.join(full_base_dir, filename)
 
     if file_type_to_save == 'feature':
-        logger.debug(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
+        logger.info(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
         data.to_csv(full_filepath, index=False, header=False)
     elif file_type_to_save == 'model':
-        logger.debug(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
+        logger.info(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
         joblib.dump(data, full_filepath)
     elif file_type_to_save == 'hyperparams':
-        logger.debug(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
+        logger.info(f'Saving {file_type_to_save} file with filename as {filename} to path {full_filepath}')
         data.to_csv(full_filepath, index=False)
     elif file_type_to_save == 'metrics':
-        logger.debug(f'Saving metrics into file {filename} at path {full_filepath}')
+        logger.info(f'Saving metrics into file {filename} at path {full_filepath}')
         # Check if a file exists
         if os.path.exists(full_filepath):
             # File exists, append content

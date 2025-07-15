@@ -204,10 +204,10 @@ def classify_columns(df, n_cat_threshold, threshold_type='ABS', cols_to_ignore=[
                         if df[cname].nunique() < n_cat_threshold and
                         df[cname].dtype == "object"]
 
-    logger.debug("Feature Type Summary:")
+    logger.info("Feature Type Summary:")
     for ftype, features in feature_types.items():
-        logger.debug(f"{ftype.title()} Features ({len(features)}):")
-        logger.debug(features)
+        logger.info(f"{ftype.title()} Features ({len(features)}):")
+        logger.info(features)
 
     logger.debug("... FINISH")
     return feature_types

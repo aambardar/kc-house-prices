@@ -181,7 +181,7 @@ class HousePricePredictor:
             submission_file_name
         )
         submission_df.to_csv(submission_file, index=False)
-        self.logger.debug(f"Predictions saved to {submission_file}")
+        self.logger.info(f"Predictions saved to {submission_file}")
         self.logger.debug("... FINISH")
 
 def main():
